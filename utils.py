@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from const import DECODE_DICT
+from const import DECODE_DICT, CHARS_DICT
 
 
 def plot_dataset_images(dataset, rows=5, cols=5, seed=None):
@@ -41,6 +41,18 @@ def encode_label(label: str, label_dict: dict = DECODE_DICT):
     # Replace huruf "O" dengan angka 0.
     label = label.replace("O", "0")
     return [label_dict[char] for char in label]
+
+
+def decode_label(input: list, label_dict: dict = CHARS_DICT):
+    """ Decode a sequence of integers representing the characters of the label
+    Args:
+        input: A list of integers representing the characters of the label.
+        label_dict: A dictionary mapping integers to characters.
+
+    Returns:
+        A list of strings representing the characters.
+    """
+    return [label_dict[key] for key in input]
 
 
 def pad_sequence(sequence: list, length: int = 9, mode: str = "pre"):

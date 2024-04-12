@@ -24,3 +24,30 @@ def plot_dataset_images(dataset, rows=5, cols=5, seed=None):
         plt.imshow(image.permute(1, 2, 0))
         plt.title(f"{label} ({len(label)})")
         plt.axis(False)
+
+
+def pad_sequence(sequence: list, length: int = 9, mode: str = "pre"):
+    """ Pad the target sequence to the given length.
+
+    Args:
+        sequence: Sequence to pad.
+        length: Length of the target sequence.
+        mode: Padding mode (either 'pre' or 'post').
+
+    Raises:
+        ValueError
+
+    Returns:
+        A list of padded target sequence.
+    """
+    n_to_pad = length - len(sequence)
+    if n_to_pad < 0:
+        raise ValueError(f"`length` must be greater than `len(sequence)`. Got len(sequence): {len(sequence)}")
+
+    pad = [0 for i in range(n_to_pad)]
+    if mode == "post":
+        return sequence + pad
+    elif mode == "pre":
+        return pad + sequence
+    else:
+        raise ValueError('Padding must be either "pre" or "post".')

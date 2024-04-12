@@ -11,6 +11,7 @@ from typing import Optional, Callable
 
 
 class CVLicensePlateDataset(Dataset):
+    """ Dataset of Commercial Vehicle License Plate."""
     mirrors = [
         "https://cvlpr-dataset.risangbaskoro.com"
     ]
@@ -27,6 +28,15 @@ class CVLicensePlateDataset(Dataset):
                  target_transform: Optional[Callable] = None,
                  download: bool = False
                  ) -> None:
+        """ Initialize the dataset.
+
+        Args:
+            root: Root path of the dataset.
+            train: Whether to get the training, testing, or validation sets.
+            transform: Optional transform to be applied on a data sample.
+            target_transform: Optional transform to be applied on target sample.
+            download: Whether to download the data. If True, downloads the dataset from the internet and puts it in root directory.
+        """
         super(CVLicensePlateDataset, self).__init__()
 
         self.root = root
@@ -47,9 +57,21 @@ class CVLicensePlateDataset(Dataset):
         return os.path.join(self.root, self.__class__.__name__, "raw")
 
     def __len__(self):
+        """
+        Returns:
+            Length of the dataset.
+        """
         return len(self.data)
 
     def __getitem__(self, idx):
+        """ Get the data sample.
+
+        Args:
+            idx: Index of the data sample.
+
+        Returns:
+            Tuple of the data sample tensor and target tensor.
+        """
         img, target = self.data[idx], self.targets[idx]
         # img = Image.fromarray(img.permute((1, 2, 0)).numpy())
 
@@ -72,7 +94,7 @@ class CVLicensePlateDataset(Dataset):
             img = np.array(img)
             img = np.moveaxis(img, -1, 0)
             images.append(img)
-            label = filename.split("_")[0] # TODO: Convert to list of classes. Use chars dict.
+            label = filename.split("_")[0]
             labels.append(label)
 
         return torch.tensor(np.array(images)), np.array(labels)

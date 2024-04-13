@@ -143,6 +143,7 @@ class CVLicensePlateDataset(Dataset):
                     continue
                 finally:
                     print()
+                break
             else:
                 raise RuntimeError(f"Error downloading {filename}")
 
@@ -168,7 +169,3 @@ class CVLicensePlateDataset(Dataset):
                 tar.extractall(download_root)
         except Exception as e:
             print(f"Error extracting file: {e}")
-
-
-if __name__ == '__main__':
-    ds = CVLicensePlateDataset("data", download=True)

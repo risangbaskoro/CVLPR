@@ -109,6 +109,9 @@ class CVLicensePlateDataset(Dataset):
         return all(
             os.path.exists(os.path.join(self.root, self.__class__.__name__, "raw", filename))
             for filename, signature in self.resources
+        ) and all(
+            os.path.exists(os.path.join(self.raw_folder, filename.replace(".tar.gz", "")))
+            for filename, signature in self.resources
         )
 
     @staticmethod
@@ -136,8 +139,8 @@ class CVLicensePlateDataset(Dataset):
                 url = f"{mirror}/{signature}/{filename}"
                 try:
                     print(f"Downloading {url}")
-                    self._download_and_extract_archive(url, download_root=self.raw_folder, filename=filename)
-                    self._check_integrity(filename, signature)
+                    self._download_and_extract_archive(url, download_root=self.raw_folder, filename=filename,
+                                                       sha256=signature)
                 except Exception as e:
                     print(f"Failed to download {url} (trying next):\n{e}")
                     continue
@@ -147,9 +150,10 @@ class CVLicensePlateDataset(Dataset):
             else:
                 raise RuntimeError(f"Error downloading {filename}")
 
-    @staticmethod
-    def _download_and_extract_archive(url, download_root, filename) -> None:
+    def _download_and_extract_archive(self, url, download_root, filename, sha256) -> None:
         print(f"Downloading {url} to {download_root} as {filename}")
+
+        fpath = f"{download_root}/{filename}"
 
         import requests
         response = requests.get(url, stream=True)
@@ -157,15 +161,17 @@ class CVLicensePlateDataset(Dataset):
         size = int(response.headers.get("content-length", 0))
 
         with tqdm(total=size, unit="bit") as progress:
-            with open(f"{download_root}/{filename}", 'wb') as f:
+            with open(fpath, 'wb') as f:
                 for data in response.iter_content(1024):
                     f.write(data)
                     progress.update(len(data))
                 f.close()
 
+        self._check_integrity(f"{self.raw_folder}/{filename}", sha256)
+
         print(f"Extracting {filename} to {download_root}")
         try:
-            with tarfile.open(f"{download_root}/{filename}", "r:gz") as tar:
+            with tarfile.open(fpath, "r:gz") as tar:
                 tar.extractall(download_root)
         except Exception as e:
             print(f"Error extracting file: {e}")

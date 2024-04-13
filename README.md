@@ -37,7 +37,7 @@ pip install -r requirements.txt
 The dataset of this project can be found using one of these methods:
 
 - Using the provided `CVLicensePlateDataset` class from `dataset.py` file.
-- Download via https://cvlpr-dataset.risangbaskoro.com/<dataset-name.zip>
+- Download via https://data.risangbaskoro.com/cvlpr/master/<dataset-name.tar.gz>
 
 > [!TIP]
 > I would recommend you to download the dataset using the provided class, as that class would be updated everytime

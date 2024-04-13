@@ -1,3 +1,4 @@
+import hashlib
 import os
 import tarfile
 
@@ -110,6 +111,19 @@ class CVLicensePlateDataset(Dataset):
             for filename, signature in self.resources
         )
 
+    @staticmethod
+    def _check_integrity(filename: str, signature: str):
+        if not os.path.isfile(filename):
+            return RuntimeError("File not found or corrupted.")
+
+        sha256 = hashlib.sha256()
+        with open(filename, "rb") as f:
+            while chunk := f.read(1024 * 1024):
+                sha256.update(chunk)
+
+        if signature != sha256.hexdigest():
+            raise RuntimeError(f"The file signature does not match.")
+
     def download(self) -> None:
         """Download the data if it does not exist already."""
         if self._check_exists():
@@ -123,10 +137,14 @@ class CVLicensePlateDataset(Dataset):
                 try:
                     print(f"Downloading {url}")
                     self._download_and_extract_archive(url, download_root=self.raw_folder, filename=filename)
+                    self._check_integrity(filename, signature)
                 except Exception as e:
-                    print(f"Error downloading {url}: {e}")
+                    print(f"Failed to download {url} (trying next):\n{e}")
+                    continue
                 finally:
                     print()
+            else:
+                raise RuntimeError(f"Error downloading {filename}")
 
     @staticmethod
     def _download_and_extract_archive(url, download_root, filename) -> None:

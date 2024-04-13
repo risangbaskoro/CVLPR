@@ -4,5 +4,6 @@
 /venv
 /wandb
 /data
+/cropped
 
 **/.DS_Store

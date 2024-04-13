@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-s", "--source", type=str, default=Path.home()/"Datasets/dataset", help="Path to the dataset")
     parser.add_argument("-a", "--size", type=tuple, default=(94, 24), help="Size of the cropped images")
-    parser.add_argument("-d", "--destination", type=str, default="data", help="Path to save the cropped images")
+    parser.add_argument("-d", "--destination", type=str, default="cropped", help="Path to save the cropped images")
     args = parser.parse_args()
 
     crop_images(args.source, args.size, args.destination)

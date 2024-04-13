@@ -1,5 +1,5 @@
 import os
-import zipfile
+import tarfile
 
 import numpy as np
 import torch
@@ -12,12 +12,17 @@ from typing import Optional, Callable
 
 class CVLicensePlateDataset(Dataset):
     """ Dataset of Commercial Vehicle License Plate."""
+    __version__ = 'v1'
+
     mirrors = [
-        "https://cvlpr-dataset.risangbaskoro.com"
+        "https://data.risangbaskoro.com/cvlpr/master"
     ]
 
     resources = [
-        "cvlpr_cropped_train_v1.zip"
+        (
+            f"cvlpr_cropped_train_{__version__}.tar.gz",
+            "f8e977ce81bbd4d3484285026618090cb6cd08af9031a313e7d831353f01315a"
+        )
     ]
 
     # TODO: CHARS DICT here so we can use it to return list of float in load_model
@@ -84,7 +89,7 @@ class CVLicensePlateDataset(Dataset):
         return img, target
 
     def load_data(self):
-        images_folder = f"cvlpr_cropped_{'train' if self.train else 'test'}_v1"
+        images_folder = f"cvlpr_cropped_{'train' if self.train else 'test'}_{self.__version__}"
         images_path = os.path.join(self.raw_folder, images_folder)
         images = []
         labels = []
@@ -101,8 +106,8 @@ class CVLicensePlateDataset(Dataset):
 
     def _check_exists(self):
         return all(
-            os.path.exists(os.path.join(self.root, self.__class__.__name__, "raw", resource))
-            for resource in self.resources
+            os.path.exists(os.path.join(self.root, self.__class__.__name__, "raw", filename))
+            for filename, signature in self.resources
         )
 
     def download(self) -> None:
@@ -112,9 +117,9 @@ class CVLicensePlateDataset(Dataset):
 
         os.makedirs(self.raw_folder, exist_ok=True)
 
-        for filename in self.resources:
+        for filename, signature in self.resources:
             for mirror in self.mirrors:
-                url = f"{mirror}/{filename}"
+                url = f"{mirror}/{signature}/{filename}"
                 try:
                     print(f"Downloading {url}")
                     self._download_and_extract_archive(url, download_root=self.raw_folder, filename=filename)
@@ -125,7 +130,7 @@ class CVLicensePlateDataset(Dataset):
 
     @staticmethod
     def _download_and_extract_archive(url, download_root, filename) -> None:
-        print(f"Downloading {url} to {download_root}")
+        print(f"Downloading {url} to {download_root} as {filename}")
 
         import requests
         response = requests.get(url, stream=True)
@@ -140,5 +145,12 @@ class CVLicensePlateDataset(Dataset):
                 f.close()
 
         print(f"Extracting {filename} to {download_root}")
-        with zipfile.ZipFile(f"{download_root}/{filename}", "r") as zip_ref:
-            zip_ref.extractall(download_root)
+        try:
+            with tarfile.open(f"{download_root}/{filename}", "r:gz") as tar:
+                tar.extractall(download_root)
+        except Exception as e:
+            print(f"Error extracting file: {e}")
+
+
+if __name__ == '__main__':
+    ds = CVLicensePlateDataset("data", download=True)

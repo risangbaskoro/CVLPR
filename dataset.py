@@ -118,8 +118,8 @@ class CVLicensePlateDataset(Dataset):
                 try:
                     print(f"Downloading {url}")
                     self._download_and_extract_archive(url, download_root=self.raw_folder, filename=filename)
-                except:
-                    print(f"Error downloading {url}")
+                except Exception as e:
+                    print(f"Error downloading {url}: {e}")
                 finally:
                     print()
 

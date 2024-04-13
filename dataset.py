@@ -22,7 +22,7 @@ class CVLicensePlateDataset(Dataset):
     resources = [
         (
             f"cvlpr_cropped_train_{__version__}.tar.gz",
-            "f8e977ce81bbd4d3484285026618090cb6cd08af9031a313e7d831353f01315a"
+            "0054e3fc6c06b7a1b436cd26c96714b98fab7388a0f9396c41007822c04b119a"
         )
     ]
 
@@ -136,10 +136,13 @@ class CVLicensePlateDataset(Dataset):
 
         for filename, signature in self.resources:
             for mirror in self.mirrors:
-                url = f"{mirror}/{signature}/{filename}"
+                # url = f"{mirror}/{signature}/{filename}"
+                url = f"{mirror}/{filename}"
                 try:
                     print(f"Downloading {url}")
-                    self._download_and_extract_archive(url, download_root=self.raw_folder, filename=filename,
+                    self._download_and_extract_archive(url,
+                                                       download_root=self.raw_folder,
+                                                       filename=filename,
                                                        sha256=signature)
                 except Exception as e:
                     print(f"Failed to download {url} (trying next):\n{e}")

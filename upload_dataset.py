@@ -81,14 +81,15 @@ def compress_dataset(target_filename, source_path, dest_path, buffer_size: int =
         tar.add(source_path, arcname=arcname)
 
     signature = get_file_sha256(tmp_path, buffer_size=buffer_size)
-    new_path = os.path.join(dest_path, signature)
-    new_filename = os.path.join(new_path, target_filename)
+    # new_path = os.path.join(dest_path, signature)
+    # new_filename = os.path.join(new_path, target_filename)
+    new_filename = os.path.join(dest_path, target_filename)
 
-    os.makedirs(new_path, exist_ok=True)
+    # os.makedirs(new_path, exist_ok=True)
 
     os.rename(tmp_path, new_filename)
     print(f"`{target_filename}` is saved with signature `{signature}` in `{new_filename}`")
-    return new_filename
+    return new_filename, signature
 
 
 if __name__ == '__main__':

@@ -40,10 +40,11 @@ def crop_images(source:str = "Datasets/cvlpr",
     # List of all image names
     img_names = [img.name for img in imgs_path.iterdir()]
 
+    num_saved_images = 0
     num_images_without_annotation = 0
     num_plates_without_label = 0
     
-    for img_name in tqdm(img_names):
+    for img_name in tqdm(img_names, desc="Cropping Images...", unit=" image"):
         xml_path = xmls_path / f"{img_name.split('.')[0]}.xml"
 
         if not xml_path.exists():
@@ -69,7 +70,9 @@ def crop_images(source:str = "Datasets/cvlpr",
                     num_plates_without_label += 1
                     continue
                 cropped_image.save(dest_path / f"{name}_{i}.jpg")
+                num_saved_images += 1
 
+    print(f"Saved {num_saved_images} images.")
     if num_images_without_annotation:
         print(f"WARNING: \t {num_images_without_annotation} images does not have annotations.")
     if num_plates_without_label:

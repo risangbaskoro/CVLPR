@@ -5,10 +5,7 @@ import os
 import tarfile
 import shutil
 
-import rclone_python.hash_types
 from rclone_python import rclone
-from rclone_python.remote_types import RemoteTypes
-from tqdm.auto import tqdm
 
 
 def get_file_sha256(filename, buffer_size: int = 65536):
@@ -78,7 +75,7 @@ def compress_dataset(target_filename, source_path, dest_path, buffer_size: int =
     tmp_path = os.path.join(dest_path, tmp_filename)
 
     with tarfile.open(tmp_path, mode='w:gz') as tar:
-        arcname = source_path.split("/")[-1]
+        arcname = target_filename.split(".")[0]
         tar.add(source_path, arcname=arcname)
 
     signature = get_file_sha256(tmp_path, buffer_size=buffer_size)
@@ -93,43 +90,72 @@ def compress_dataset(target_filename, source_path, dest_path, buffer_size: int =
     return new_filename, signature
 
 
-if __name__ == '__main__':
-    local_destination = 'data/new'
+def compress_and_upload_dataset(version, source='cropped', dest="data/new", upload=False, commit=False):
+    local_destination = dest
     local_train_path = os.path.join(local_destination, 'train')
     local_test_path = os.path.join(local_destination, 'test')
     local_val_path = os.path.join(local_destination, 'val')
 
-    remote_name = 'r2-data-bucket'
-    bucket_path = 'cvlpr/master'
-    # bucket_train_path = remote_name + ":" + os.path.join(bucket_path, 'train')
-    # bucket_test_path = remote_name + ":" + os.path.join(bucket_path, 'test')
-    # bucket_val_path = remote_name + ":" + os.path.join(bucket_path, 'val')
-
     if os.path.exists(local_destination):
         shutil.rmtree(local_destination)
 
-    new_version = 'v2'
-
-    train_file, train_sig = compress_dataset(f"cvlpr_cropped_train_{new_version}.tar.gz",
-                                             'data/CVLicensePlateDataset/raw/cvlpr_cropped_train_v1',
+    train_file, train_sig = compress_dataset(f"cvlpr_cropped_train_{version}.tar.gz",
+                                             source,
                                              local_train_path)
 
-    # rclone.copy(local_train_path, f"{remote_name}:{bucket_path}")
+    if upload:
+        remote_name = 'r2-data-bucket'
+        bucket_path = 'cvlpr/master'
 
-    with open("dataset.py", "r") as f:
-        strings = f.read()
-        f.close()
+        rclone.copy(local_train_path, f"{remote_name}:{bucket_path}")
+        print(f"{local_train_path} uploaded to {remote_name}:{bucket_path}")
 
-    import dataset
+        with open("dataset.py", "r") as f:
+            strings = f.read()
+            f.close()
 
-    ds = dataset.CVLicensePlateDataset
+        import dataset
 
-    old_version = ds.__version__
-    strings = strings.replace(old_version, "v2")
+        ds = dataset.CVLicensePlateDataset
 
-    old_train_sig = ds.resources[0][-1]
-    strings = strings.replace(old_train_sig, train_sig)
+        old_version = ds.__version__
+        strings = strings.replace(old_version, version)
 
-    with open("dataset.py", "w") as f:
-        f.write(strings)
-        f.close()
+        old_train_sig = ds.resources[0][-1]
+        strings = strings.replace(old_train_sig, train_sig)
+
+        with open("dataset.py", "w") as f:
+            f.write(strings)
+            f.close()
+
+    if commit:
+        os.system("git add dataset.py")
+        os.system(f'git commit -m "Update dataset.py to version \'{version}\'"')
+
+
+if __name__ == '__main__':
+    import argparse
+    from datetime import datetime
+
+    default_version = datetime.now().strftime("%Y%m%d")
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-v", "--version", type=str, default=default_version, help="Version of the new dataset.")
+    parser.add_argument("-s", "--source", type=str, default="cropped", help="Source of the new dataset.")
+    parser.add_argument("-d", "--destination", type=str, default="data/new",
+                        help="Destination of the compressed dataset.")
+    parser.add_argument("-u", "--upload", type=bool, action=argparse.BooleanOptionalAction,
+                        help="Set to upload the compressed dataset to the bucket remote.")
+    parser.add_argument("-c", "--commit", type=bool, action=argparse.BooleanOptionalAction,
+                        help="Set to automatically commit dataset.py")
+
+    args = parser.parse_args()
+
+    compress_and_upload_dataset(
+        version=args.version,
+        source=args.source,
+        dest=args.destination,
+        upload=args.upload,
+        commit=args.commit
+    )

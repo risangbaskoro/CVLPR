@@ -26,7 +26,11 @@ class CVLicensePlateDataset(Dataset):
         )
     ]
 
-    # TODO: CHARS DICT here so we can use it to return list of float in load_model
+    # TODO: CHARS DICT here so we can use it to return list of float in load_data
+    corpus = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+    corpus_dict = {char: idx for idx, char in enumerate(corpus)}
+
     def __init__(self,
                  root: str,
                  train: bool = True,
@@ -80,6 +84,8 @@ class CVLicensePlateDataset(Dataset):
         """
         img, target = self.data[idx], self.targets[idx]
         # img = Image.fromarray(img.permute((1, 2, 0)).numpy())
+        target = [self.corpus_dict[char] for char in target]
+        target = torch.tensor(target, dtype=torch.long)
 
         if self.transform is not None:
             img = self.transform(img)

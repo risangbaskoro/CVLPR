@@ -5,6 +5,7 @@ import os
 import tarfile
 import shutil
 
+import rclone_python.hash_types
 from rclone_python import rclone
 from rclone_python.remote_types import RemoteTypes
 from tqdm.auto import tqdm
@@ -107,8 +108,28 @@ if __name__ == '__main__':
     if os.path.exists(local_destination):
         shutil.rmtree(local_destination)
 
-    compress_dataset('cvlpr_cropped_train_v1.tar.gz',
-                     'data/CVLicensePlateDataset/raw/cvlpr_cropped_train_v1',
-                     local_train_path)
+    new_version = 'v2'
 
-    rclone.copy(local_train_path, f"{remote_name}:{bucket_path}")
+    train_file, train_sig = compress_dataset(f"cvlpr_cropped_train_{new_version}.tar.gz",
+                                             'data/CVLicensePlateDataset/raw/cvlpr_cropped_train_v1',
+                                             local_train_path)
+
+    # rclone.copy(local_train_path, f"{remote_name}:{bucket_path}")
+
+    with open("dataset.py", "r") as f:
+        strings = f.read()
+        f.close()
+
+    import dataset
+
+    ds = dataset.CVLicensePlateDataset
+
+    old_version = ds.__version__
+    strings = strings.replace(old_version, "v2")
+
+    old_train_sig = ds.resources[0][-1]
+    strings = strings.replace(old_train_sig, train_sig)
+
+    with open("dataset.py", "w") as f:
+        f.write(strings)
+        f.close()

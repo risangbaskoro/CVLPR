@@ -11,7 +11,7 @@ The repository for Commercial Vehicle License Plate Recognition (CVLPR), inspire
 > [!WARNING]
 > This project is **Work In Progress**. This repo is considered ready when this message is no longer exists.
 
-This repository is built mainly with [Pytorch](https://pytorch.org).
+This repository is built mainly with [PyTorch](https://pytorch.org).
 
 ## Setup
 

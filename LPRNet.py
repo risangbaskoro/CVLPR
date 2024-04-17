@@ -101,7 +101,12 @@ class LPRNet(nn.Module):
         ])
 
         pre_decoder_in_channels = 960 if use_global_context else 256
-        self.pre_decoder = nn.Conv2d(in_channels=pre_decoder_in_channels, out_channels=num_classes, kernel_size=(1, 13), padding='same')
+        self.out_classes = nn.Sequential(
+            nn.Conv2d(in_channels=pre_decoder_in_channels, out_channels=num_classes, kernel_size=(1, 13),
+                      padding='same'),
+            nn.BatchNorm2d(num_classes),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self, x):
         outputs = []
@@ -125,7 +130,7 @@ class LPRNet(nn.Module):
             print(f"\nScale 4 shape: {scale_4.shape}\n")
             x = torch.concat([scale_1, scale_2, scale_3, scale_5, scale_4], dim=1)
 
-        x = self.pre_decoder(x)
+        x = self.out_classes(x)
         return x
 
 

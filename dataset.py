@@ -13,7 +13,7 @@ from typing import Optional, Callable
 
 class CVLicensePlateDataset(Dataset):
     """ Dataset of Commercial Vehicle License Plate."""
-    __version__ = '20240415'
+    __version__ = '20240418'
 
     mirrors = [
         "https://data.risangbaskoro.com/cvlpr/master"
@@ -22,7 +22,7 @@ class CVLicensePlateDataset(Dataset):
     resources = [
         (
             f"cvlpr_cropped_train_{__version__}.tar.gz",
-            "c2f68f39055c8ff65a62815b56914e1e282ec9f1f62209676c439d1c95563a44"
+            "330646b6d761fe4d628d62dd55c998fa0a4633b4c238bb70364055dc0f022d34"
         )
     ]
 

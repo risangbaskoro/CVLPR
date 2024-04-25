@@ -27,9 +27,9 @@ class CVLicensePlateDataset(Dataset):
     ]
 
     # TODO: CHARS DICT here so we can use it to return list of float in load_data
-    corpus = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    corpus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
-    corpus_dict = {char: idx for idx, char in enumerate(corpus)}
+    corpus_dict = {char: idx + 1 for idx, char in enumerate(corpus)}
 
     def __init__(self,
                  root: str,

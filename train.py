@@ -1,0 +1,132 @@
+import argparse
+from dataclasses import asdict, dataclass
+
+import torch
+import torch.nn.functional as F
+from torch import nn
+from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
+
+from LPRNet import LPRNet
+from dataset import CVLicensePlateDataset
+
+
+@dataclass
+class TrainConfig:
+    """Configuration for training."""
+    epochs: int = 1
+    lr: float = 1e-2
+    batch_size: int = 32
+
+    dict = asdict
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser()
+    # TODO: Add arguments here...
+    parser.add_argument('-e', '--epochs', type=int, default=1, help='Number of epochs.')
+    parser.add_argument('-r', '--learning_rate', type=float, default=1e-3, help='Learning rate.')
+    parser.add_argument('-b', '--batch_size', type=int, default=32, help='Batch size.')
+    return parser.parse_args()
+
+
+def print_arguments(config, num_dashes=30):
+    print("Training LPRNet with the following configuration:")
+    print("-" * num_dashes)
+    for key, value in vars(config).items():
+        print(f"{key:<15s}\t: {value}")
+    print("-" * num_dashes)
+
+
+def collate_fn(batch):
+    """Collate function for the dataloader.
+
+    Automatically adds padding to the target of each batch.
+    """
+    # Extract samples and targets from the batch
+    samples, targets = zip(*batch)
+
+    # Pad the target sequences to the same length
+    padded_targets = pad_sequence(targets, batch_first=True, padding_value=0)
+
+    # Return padded samples and targets
+    return torch.stack(samples), padded_targets
+
+
+def train(args):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    config = TrainConfig(
+        epochs=args.epochs,
+        lr=args.learning_rate,
+        batch_size=args.batch_size
+    )
+
+    print_arguments(config)
+
+    ds = CVLicensePlateDataset("data", download=True)
+
+    train_dl = DataLoader(dataset=ds, batch_size=config.batch_size, shuffle=True, collate_fn=collate_fn)
+
+    num_classes = len(ds.corpus) + 1
+
+    model = LPRNet(num_classes=num_classes,
+                   input_channel=3,
+                   use_global_context=False)
+    model.to(device)
+
+    loss_fn = nn.CTCLoss(zero_infinity=True)
+    optimizer = torch.optim.Adam(model.parameters(),
+                                 lr=config.lr)
+
+    for epoch in range(config.epochs):
+        model.train()
+        train_loss = 0
+        for idx, batch in enumerate(tqdm(train_dl, unit="steps", desc=f"Epoch {epoch + 1}/{config.epochs}")):
+            # Zero grad optimizer
+            optimizer.zero_grad()
+
+            # Define input and target from the batch
+            X, y = batch
+            X = X.type(torch.float) / 255
+            X, y = X.to(device), y.to(device)
+
+            # Get logits
+            logits = model(X)
+
+            # Prepare logits to calculate loss
+            logits = F.log_softmax(logits, dim=2)
+            logits = logits.mean(dim=2)
+
+            # Calculate each sequence length for each sample
+            sample_batch_size, timesteps = logits.size(0), logits.size(1)
+            sequence_lengths = torch.full((sample_batch_size,), timesteps, dtype=torch.int)
+
+            # Calculate target length for each target sample
+            target_lengths = y.ne(0).sum(dim=1)
+
+            # Transpose the logits
+            logits = logits.transpose(0, 1)
+
+            # Calculate loss
+            loss = loss_fn(log_probs=logits,
+                           targets=y,
+                           input_lengths=sequence_lengths,
+                           target_lengths=target_lengths)
+
+            # Add loss
+            train_loss += loss.item()
+
+            # Backprop
+            loss.backward()
+
+            # Update the model parameters
+            optimizer.step()
+
+        print(f"Loss: {train_loss / train_dl.batch_size}\n")
+
+
+if __name__ == '__main__':
+    args = get_arguments()
+    train(args)

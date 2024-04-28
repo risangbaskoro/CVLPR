@@ -76,7 +76,7 @@ def train(args):
                    use_global_context=False)
     model.to(device)
 
-    loss_fn = nn.CTCLoss(zero_infinity=True)
+    loss_fn = nn.CTCLoss()
     optimizer = torch.optim.Adam(model.parameters(),
                                  lr=config.lr)
 
@@ -89,25 +89,25 @@ def train(args):
 
             # Define input and target from the batch
             X, y = batch
-            X = X.type(torch.float) / 255
+            X = X.type(torch.float)
             X, y = X.to(device), y.to(device)
 
             # Get logits
             logits = model(X)
 
             # Prepare logits to calculate loss
-            logits = F.log_softmax(logits, dim=2)
+            logits = F.log_softmax(logits, dim=2).detach().requires_grad_()
             logits = logits.mean(dim=2)
 
             # Calculate each sequence length for each sample
             sample_batch_size, timesteps = logits.size(0), logits.size(1)
-            sequence_lengths = torch.full((sample_batch_size,), timesteps, dtype=torch.int)
+            sequence_lengths = torch.full(size=(sample_batch_size,), fill_value=timesteps, dtype=torch.long)
 
             # Calculate target length for each target sample
             target_lengths = y.ne(0).sum(dim=1)
 
             # Transpose the logits
-            logits = logits.transpose(0, 1)
+            logits = logits.permute(2, 0, 1)
 
             # Calculate loss
             loss = loss_fn(log_probs=logits,
@@ -128,5 +128,5 @@ def train(args):
 
 
 if __name__ == '__main__':
-    args = get_arguments()
-    train(args)
+    arguments = get_arguments()
+    train(arguments)

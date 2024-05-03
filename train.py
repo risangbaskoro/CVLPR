@@ -17,6 +17,7 @@ from dataset import CVLicensePlateDataset
 @dataclass
 class TrainConfig:
     """Configuration for training."""
+    device: torch.device = torch.device("cpu")
     epochs: int = 1
     lr: float = 1e-2
     batch_size: int = 32
@@ -57,9 +58,8 @@ def collate_fn(batch):
 
 
 def train(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     config = TrainConfig(
+        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
         epochs=args.epochs,
         lr=args.learning_rate,
         batch_size=args.batch_size
@@ -76,7 +76,7 @@ def train(args):
     model = LPRNet(num_classes=num_classes,
                    input_channel=3,
                    use_global_context=False)
-    model.to(device)
+    model.to(config.device)
 
     loss_fn = nn.CTCLoss(blank=0, zero_infinity=False, reduction="mean")
     optimizer = torch.optim.Adam(model.parameters(),
@@ -99,7 +99,7 @@ def train(args):
             X, y = batch
             X = X.type(torch.float)
             y = y.type(torch.float)
-            X, y = X.to(device), y.to(device)
+            X, y = X.to(config.device), y.to(config.device)
 
             # Get logits
             logits = model(X)

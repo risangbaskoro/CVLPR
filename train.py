@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from dataclasses import asdict, dataclass
 
@@ -76,20 +78,27 @@ def train(args):
                    use_global_context=False)
     model.to(device)
 
-    loss_fn = nn.CTCLoss()
+    loss_fn = nn.CTCLoss(blank=0, zero_infinity=False, reduction="mean")
     optimizer = torch.optim.Adam(model.parameters(),
                                  lr=config.lr)
 
     for epoch in range(config.epochs):
         model.train()
         train_loss = 0
-        for idx, batch in enumerate(tqdm(train_dl, unit="steps", desc=f"Epoch {epoch + 1}/{config.epochs}")):
+
+        for idx, batch in enumerate(
+                tqdm(train_dl,
+                     unit="steps",
+                     desc=f"Epoch {epoch + 1}/{config.epochs}",
+                     dynamic_ncols=True)
+        ):
             # Zero grad optimizer
             optimizer.zero_grad()
 
             # Define input and target from the batch
             X, y = batch
             X = X.type(torch.float)
+            y = y.type(torch.float)
             X, y = X.to(device), y.to(device)
 
             # Get logits
@@ -115,11 +124,11 @@ def train(args):
                            input_lengths=sequence_lengths,
                            target_lengths=target_lengths)
 
-            # Add loss
-            train_loss += loss.item()
-
             # Backprop
             loss.backward()
+
+            # Add loss
+            train_loss += loss
 
             # Update the model parameters
             optimizer.step()

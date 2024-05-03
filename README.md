@@ -27,6 +27,8 @@ git clone https://github.com/risangbaskoro/cvlpr.git
 pip install -r requirements.txt
 ```
 
+The `requirements.txt` does not include the CUDA version of PyTorch. Please see the [PyTorch Get Started Guide](https://pytorch.org/get-started/) for installation instructions.
+
 ## Usage
 
 > [!NOTE]
@@ -46,9 +48,6 @@ The dataset of this project can be found using one of these methods:
 ## To Do
 
 - [ ] Write a better documentation.
-- [ ] Write a script to automatically compress new dataset using `gzip` and append `sha256` of its contents as the
-  filename. E.g.: `main/cvlpr/data/<sha256>-cvlpr-dataset-<version>.gz`.
-- [ ] With that in mind, also adjust the download resource from `CVLicensePlateDataset`.
 - [ ] Implement Global Context as in [ParseNet](https://arxiv.org/abs/1506.04579).
 - [ ] Create (and implement) Beam Search for the decoding procedure at inference stage.
 

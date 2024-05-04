@@ -109,8 +109,8 @@ def train(args):
             logits = logits.mean(dim=2)
 
             # Calculate each sequence length for each sample
-            sample_batch_size, timesteps = logits.size(0), logits.size(1)
-            sequence_lengths = torch.full(size=(sample_batch_size,), fill_value=timesteps, dtype=torch.long)
+            sample_batch_size, sequence_length = logits.size(0), logits.size(1)
+            input_lengths = torch.full(size=(sample_batch_size,), fill_value=sequence_length, dtype=torch.long)
 
             # Calculate target length for each target sample
             target_lengths = y.ne(0).sum(dim=1)
@@ -121,7 +121,7 @@ def train(args):
             # Calculate loss
             loss = loss_fn(log_probs=logits,
                            targets=y,
-                           input_lengths=sequence_lengths,
+                           input_lengths=input_lengths,
                            target_lengths=target_lengths)
 
             # Backprop

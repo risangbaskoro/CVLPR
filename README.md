@@ -45,6 +45,10 @@ The dataset of this project can be found using one of these methods:
 > I would recommend you to download the dataset using the provided class, as that class would be updated everytime
 > there's an update to the dataset itself.
 
+## Training
+
+You can do model training by running `train.py`. Run it with `--help` flag to get all the arguments.
+
 ## To Do
 
 - [ ] Write a better documentation.

@@ -105,7 +105,6 @@ def train(args):
             logits = model(X)
 
             # Prepare logits to calculate loss
-            logits = F.log_softmax(logits, dim=2).detach().requires_grad_()
             logits = logits.mean(dim=2)
 
             # Calculate each sequence length for each sample
@@ -116,10 +115,10 @@ def train(args):
             target_lengths = y.ne(0).sum(dim=1)
 
             # Transpose the logits
-            logits = logits.permute(2, 0, 1)
+            logits = logits.permute(2, 0, 1)  # (Timestep, Batch Size, Number of Classes)
 
             # Calculate loss
-            loss = loss_fn(log_probs=logits,
+            loss = loss_fn(log_probs=F.log_softmax(logits, dim=-1),
                            targets=y,
                            input_lengths=input_lengths,
                            target_lengths=target_lengths)

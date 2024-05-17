@@ -1,6 +1,4 @@
-<p align=center>
-  <img src="https://github.com/risangbaskoro/CVLPR/assets/36572342/dcd9ddb6-8b2e-40e2-80db-0479024fdc39)"  alt="License plate images with their true label as title for each image"/>
-</p>
+![Banner Image](https://github.com/risangbaskoro/CVLPR/assets/36572342/dcd9ddb6-8b2e-40e2-80db-0479024fdc39)
 <h1 align="center">
     Commercial Vehicle License Plate Recognition
 </h1>

@@ -26,6 +26,8 @@ class CVLicensePlateDataset(Dataset):
         )
     ]
 
+    allowed_subset = ['train']
+
     # TODO: CHARS DICT here so we can use it to return list of float in load_data
     corpus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
@@ -33,7 +35,7 @@ class CVLicensePlateDataset(Dataset):
 
     def __init__(self,
                  root: str,
-                 train: bool = True,
+                 subset: str = 'train',
                  transform: Optional[Callable] = None,
                  target_transform: Optional[Callable] = None,
                  download: bool = False
@@ -42,15 +44,18 @@ class CVLicensePlateDataset(Dataset):
 
         Args:
             root: Root path of the dataset.
-            train: Whether to get the training, testing, or validation sets.
+            subset: Whether to get the training, testing, or validation sets. Valid value: train, test, val
             transform: Optional transform to be applied on a data sample.
             target_transform: Optional transform to be applied on target sample.
             download: Whether to download the data. If True, downloads the dataset from the internet and puts it in root directory.
         """
         super(CVLicensePlateDataset, self).__init__()
 
+        if subset not in self.allowed_subset:
+            raise ValueError(f"Subset should be one of {self.allowed_subset}")
+
         self.root = root
-        self.train = train
+        self.subset = subset
         self.transform = transform
         self.target_transform = target_transform
 
@@ -96,7 +101,7 @@ class CVLicensePlateDataset(Dataset):
         return img, target
 
     def load_data(self):
-        images_folder = f"cvlpr_cropped_{'train' if self.train else 'test'}_{self.__version__}"
+        images_folder = f"cvlpr_cropped_{self.subset}_{self.__version__}"
         images_path = os.path.join(self.raw_folder, images_folder)
         images = []
         labels = []

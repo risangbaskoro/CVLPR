@@ -91,24 +91,32 @@ def compress_dataset(target_filename, source_path, dest_path, buffer_size: int =
 
 
 def compress_and_upload_dataset(version, source='cropped', dest="data/new", upload=False, commit=False):
+    sets = ['train', 'test', 'val']
     local_destination = dest
-    local_train_path = os.path.join(local_destination, 'train')
-    local_test_path = os.path.join(local_destination, 'test')
-    local_val_path = os.path.join(local_destination, 'val')
+
+    local_subset_paths = []
+    for subset in sets:
+        local_subset_paths.append(os.path.join(local_destination, subset))
 
     if os.path.exists(local_destination):
         shutil.rmtree(local_destination)
 
-    train_file, train_sig = compress_dataset(f"cvlpr_cropped_train_{version}.tar.gz",
-                                             source,
-                                             local_train_path)
+    files = []
+
+    for idx, local_subset_path in enumerate(local_subset_paths):
+        file, signature = compress_dataset(f"cvlpr_cropped_{sets[idx]}_{version}.tar.gz",
+                                           source,
+                                           local_subset_path)
+
+        files.append((file, signature))
 
     if upload:
         remote_name = 'r2-data-bucket'
         bucket_path = 'cvlpr/master'
 
-        rclone.copy(local_train_path, f"{remote_name}:{bucket_path}")
-        print(f"{local_train_path} uploaded to {remote_name}:{bucket_path}")
+        for local_subset_path in local_subset_paths:
+            rclone.copy(local_subset_path, f"{remote_name}:{bucket_path}")
+            print(f"{local_subset_path} uploaded to {remote_name}:{bucket_path}")
 
         with open("dataset.py", "r") as f:
             strings = f.read()
@@ -121,8 +129,8 @@ def compress_and_upload_dataset(version, source='cropped', dest="data/new", uplo
         old_version = ds.__version__
         strings = strings.replace(old_version, version)
 
-        old_train_sig = ds.resources[0][-1]
-        strings = strings.replace(old_train_sig, train_sig)
+        for idx, (old_file, old_signature) in enumerate(ds.resources):
+            strings = strings.replace(old_signature, files[idx][-1])
 
         with open("dataset.py", "w") as f:
             f.write(strings)

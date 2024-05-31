@@ -141,7 +141,7 @@ def compress_and_upload_dataset(version, source='cropped', dest="data/new", uplo
         os.system(f'git commit -m "Update dataset.py to version \'{version}\'"')
 
 
-if __name__ == '__main__':
+def parse_arguments():
     import argparse
     from datetime import datetime
 
@@ -158,7 +158,11 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--commit", type=bool, action=argparse.BooleanOptionalAction,
                         help="Set to automatically commit dataset.py")
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_arguments()
 
     compress_and_upload_dataset(
         version=args.version,

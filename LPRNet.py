@@ -117,10 +117,10 @@ class LPRNet(nn.Module):
 
         # TODO: Fix global context concat dimension.
         if self.use_global_context:
-            scale_1 = self.gc[0](outputs[0])
-            scale_2 = self.gc[1](outputs[4])
-            scale_3 = self.gc[2](outputs[6])
-            scale_5 = self.gc[3](outputs[7])
+            scale_1 = self.gc[0](outputs[0])  # Conv 1
+            scale_2 = self.gc[1](outputs[4])  # Basic Block 1
+            scale_3 = self.gc[2](outputs[6])  # Basic Block 2
+            scale_5 = self.gc[3](outputs[7])  # Basic Block 3
             scale_4 = torch.div(x, x.square().mean())
             print(f"Original x shape: {x.shape}\n")
             print(f"Scale 1 shape: {scale_1.shape}")

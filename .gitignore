@@ -7,6 +7,9 @@
 /cropped
 /ckpt
 
+# Scratch File
+**/*scratch.py
+
 **/.DS_Store
 **/__pycache__/
 

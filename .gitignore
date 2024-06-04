@@ -5,6 +5,7 @@
 /wandb
 /data
 /cropped
+/ckpt
 
 **/.DS_Store
 **/__pycache__/

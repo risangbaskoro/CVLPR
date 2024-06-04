@@ -57,7 +57,61 @@ def collate_fn(batch):
     return torch.stack(samples), padded_targets
 
 
-def train(args):
+def train(model, dataloader, config, epoch, optimizer, criterion):
+    model.train()
+    train_loss = 0
+
+    for idx, batch in enumerate(
+            tqdm(dataloader,
+                 unit="steps",
+                 desc=f"Epoch {epoch + 1}/{config.epochs}",
+                 dynamic_ncols=True)
+    ):
+        # Zero grad optimizer
+        optimizer.zero_grad()
+
+        # Define input and target from the batch
+        images, targets = batch
+        images = images.type(torch.float).to(config.device)
+        targets = targets.type(torch.float).to(config.device)
+
+        # Get logits
+        logits = model(images)
+
+        # Prepare logits to calculate loss
+        logits = logits.mean(dim=2)
+
+        # Calculate each sequence length for each sample
+        sample_batch_size, sequence_length = logits.size(0), logits.size(1)
+        input_lengths = torch.full(size=(sample_batch_size,), fill_value=sequence_length, dtype=torch.long)
+
+        # Calculate target length for each target sample
+        target_lengths = targets.ne(0).sum(dim=1)
+
+        # Transpose the logits
+        logits = logits.permute(2, 0, 1)  # (Timestep, Batch Size, Number of Classes)
+
+        log_probs = F.log_softmax(logits, dim=-1)
+
+        # Calculate loss
+        loss = criterion(log_probs=log_probs,
+                         targets=targets,
+                         input_lengths=input_lengths,
+                         target_lengths=target_lengths)
+
+        # Backprop
+        loss.backward()
+
+        # Update the model parameters
+        optimizer.step()
+
+        # Add loss
+        train_loss += loss
+
+    return train_loss
+
+
+def main(args):
     config = TrainConfig(
         device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
         epochs=args.epochs,
@@ -83,59 +137,16 @@ def train(args):
                                  lr=config.lr)
 
     for epoch in range(config.epochs):
-        model.train()
-        train_loss = 0
-
-        for idx, batch in enumerate(
-                tqdm(train_dl,
-                     unit="steps",
-                     desc=f"Epoch {epoch + 1}/{config.epochs}",
-                     dynamic_ncols=True)
-        ):
-            # Zero grad optimizer
-            optimizer.zero_grad()
-
-            # Define input and target from the batch
-            images, targets = batch
-            images = images.type(torch.float).to(config.device)
-            targets = targets.type(torch.float).to(config.device)
-
-            # Get logits
-            logits = model(images)
-
-            # Prepare logits to calculate loss
-            logits = logits.mean(dim=2)
-
-            # Calculate each sequence length for each sample
-            sample_batch_size, sequence_length = logits.size(0), logits.size(1)
-            input_lengths = torch.full(size=(sample_batch_size,), fill_value=sequence_length, dtype=torch.long)
-
-            # Calculate target length for each target sample
-            target_lengths = targets.ne(0).sum(dim=1)
-
-            # Transpose the logits
-            logits = logits.permute(2, 0, 1)  # (Timestep, Batch Size, Number of Classes)
-
-            log_probs = F.log_softmax(logits, dim=-1)
-
-            # Calculate loss
-            loss = loss_fn(log_probs=log_probs,
-                           targets=targets,
-                           input_lengths=input_lengths,
-                           target_lengths=target_lengths)
-
-            # Backprop
-            loss.backward()
-
-            # Add loss
-            train_loss += loss
-
-            # Update the model parameters
-            optimizer.step()
+        train_loss = train(model=model,
+                           dataloader=train_dl,
+                           config=config,
+                           epoch=epoch,
+                           optimizer=optimizer,
+                           criterion=loss_fn)
 
         print(f"Loss: {train_loss / train_dl.batch_size}\n")
 
 
 if __name__ == '__main__':
     arguments = get_arguments()
-    train(arguments)
+    main(arguments)

@@ -175,7 +175,7 @@ def main(args):
     if config.load_path:
         file_path = get_latest_checkpoint(config.load_path)
         start_epoch = int(file_path.split('_')[-1].split('.')[0])
-        model.load_state_dict(torch.load(file_path))
+        model.load_state_dict(torch.load(file_path, map_location=config.device))
 
     model.to(config.device)
 

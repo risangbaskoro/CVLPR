@@ -169,7 +169,7 @@ def main(args):
 
     model = LPRNet(num_classes=num_classes,
                    input_channel=3,
-                   use_global_context=False)
+                   with_global_context=False)
 
     start_epoch = 0
     if config.load_path:

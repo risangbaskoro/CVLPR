@@ -72,9 +72,9 @@ class GlobalContext(nn.Module):
 
 
 class LPRNet(nn.Module):
-    def __init__(self, num_classes: int, input_channel: int = 3, use_global_context: bool = False):
+    def __init__(self, num_classes: int, input_channel: int = 3, with_global_context: bool = False):
         super(LPRNet, self).__init__()
-        self.use_global_context = use_global_context
+        self.use_global_context = with_global_context
 
         self.layers = nn.ModuleDict({
             "conv_1": nn.Conv2d(in_channels=input_channel, out_channels=64, kernel_size=(3, 3), stride=1, padding=1),
@@ -100,7 +100,7 @@ class LPRNet(nn.Module):
             GlobalContext((3, 1), (3, 1)),
         ])
 
-        pre_decoder_in_channels = 960 if use_global_context else 256
+        pre_decoder_in_channels = 960 if with_global_context else 256
         self.out_classes = nn.Sequential(
             nn.Conv2d(in_channels=pre_decoder_in_channels, out_channels=num_classes, kernel_size=(1, 13),
                       padding='same'),
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     sample_img = torch.rand(size=(1, 3, 24, 94))
 
     n_classes = len(CHARS)
-    model = LPRNet(n_classes, use_global_context=False)
+    model = LPRNet(n_classes, with_global_context=False)
     result = model(sample_img)
     print(result, result.shape)
     print()

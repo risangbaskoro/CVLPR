@@ -28,10 +28,14 @@ class CVLicensePlateDataset(Dataset):
 
     allowed_subset = ['train']
 
-    # TODO: CHARS DICT here so we can use it to return list of float in load_data
-    corpus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    corpus_dict = {
+        '<BLANK>': 0, 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10, 'K': 11, 'L': 12,
+        'M': 13, 'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23,
+        'X': 24, 'Y': 25, 'Z': 26, '1': 27, '2': 28, '3': 29, '4': 30, '5': 31, '6': 32, '7': 33, '8': 34,
+        '9': 35, '0': 36
+    }
 
-    corpus_dict = {char: idx + 1 for idx, char in enumerate(corpus)}
+    labels_dict = {v: k for k, v in corpus_dict.items()}
 
     def __init__(self,
                  root: str,

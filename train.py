@@ -166,7 +166,7 @@ def main(args):
 
     train_dl = DataLoader(dataset=ds, batch_size=config.batch_size, shuffle=True, collate_fn=collate_fn)
 
-    num_classes = len(ds.corpus) + 1
+    num_classes = len(ds.corpus_dict)
 
     model = LPRNet(num_classes=num_classes,
                    input_channel=3,
@@ -196,7 +196,7 @@ def main(args):
         # print(f"Loss: {train_loss / train_dl.batch_size}")
 
         # Save Checkpoint
-        if config.save_path and (epoch + 1) % 25 == 0:
+        if config.save_path and (epoch + 1) % 100 == 0:
             save_checkpoint(
                 model=model,
                 config=config,

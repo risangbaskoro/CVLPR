@@ -13,7 +13,6 @@ warnings.filterwarnings("ignore")
 
 if __name__ == '__main__':
     ds = CVLicensePlateDataset('data', subset='train', download=False)
-    corpus_list = list(ds.corpus_dict.keys())
 
     target_label = 'AB8360DT'
     img_path = f'data/CVLicensePlateDataset/raw/cvlpr_cropped_test_20240418/AB8360DT_12.jpeg'
@@ -39,5 +38,5 @@ if __name__ == '__main__':
     for prob in result:
         result_array.append(prob.argmax())
 
-    converted_to_label = [corpus_list[idx-1] for idx in result_array]
+    converted_to_label = [ds.labels_dict[idx] for idx in result_array]
     print(converted_to_label)

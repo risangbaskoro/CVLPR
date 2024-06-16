@@ -72,8 +72,9 @@ def train(model, dataloader, config, epoch, start_epoch, optimizer, criterion):
     for idx, batch in enumerate(
             tqdm(dataloader,
                  unit="steps",
-                 desc=f"Epoch {epoch + 1}/{start_epoch + config.epochs}",
-                 dynamic_ncols=True)
+                 desc=f"Epoch {epoch + 1}/{start_epoch + config.epochs}.",
+                 position=0,
+                 leave=False)
     ):
         # Zero grad optimizer
         optimizer.zero_grad()
@@ -192,7 +193,7 @@ def main(args):
                            optimizer=optimizer,
                            criterion=loss_fn)
 
-        print(f"Loss: {train_loss / train_dl.batch_size}")
+        # print(f"Loss: {train_loss / train_dl.batch_size}")
 
         # Save Checkpoint
         if config.save_path and (epoch + 1) % 25 == 0:
@@ -201,7 +202,7 @@ def main(args):
                 config=config,
                 epoch=epoch)
 
-        print()
+        # print()
 
 
 if __name__ == '__main__':
